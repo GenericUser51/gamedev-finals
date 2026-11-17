@@ -40,12 +40,9 @@ public class FirstPersonMomentum : MonoBehaviour
     [SerializeField] float airDrag = 1f;
 
     [Header("Slopes")]
-    [Tooltip("How much of gravity speeds you up when moving downhill. Extra speed builds past your normal top speed.")]
+    [Tooltip("How much of gravity speeds you up when moving downhill. Extra speed builds past your normal top speed. " +
+             "Walking and sprinting uphill aren't slowed (only slides are, in FirstPersonCrouchSlide).")]
     [SerializeField] float downhillAcceleration = 0.6f;
-    [Tooltip("How much slopes lower your top speed going uphill (scaled by steepness). 1 = 20° slope ≈ 34% slower.")]
-    [SerializeField] float uphillSpeedPenalty = 1f;
-    [Tooltip("How much of gravity slows you down when carrying extra speed uphill.")]
-    [SerializeField] float uphillDeceleration = 1f;
     [Tooltip("Slopes gentler than this (degrees) count as flat.")]
     [SerializeField] float minSlopeAngle = 3f;
     [Tooltip("When running fast over a crest or down a slope, snap back to ground within this distance instead of lifting off.")]
@@ -161,8 +158,7 @@ public class FirstPersonMomentum : MonoBehaviour
         Vector3 travelDir = speed > 0.1f ? v / speed : wishDir;
         float alignment = steepness > 0f ? Vector3.Dot(travelDir, downhillDir) : 0f;
 
-        // Uphill lowers your top speed.
-        if (alignment < 0f) wishSpeed *= Mathf.Max(0.3f, 1f - uphillSpeedPenalty * steepness * -alignment);
+        // Uphill doesn't slow walking or sprinting; only downhill matters (it feeds extra speed).
         bool goingDownhill = alignment > 0.1f;
 
         if (!hasInput)
@@ -190,11 +186,10 @@ public class FirstPersonMomentum : MonoBehaviour
             result = direction * newSpeed;
         }
 
-        // Gravity along the slope: speeds you up going down, slows you going up.
-        if (alignment != 0f)
+        // Gravity along the slope speeds you up going down (going up, it doesn't slow you).
+        if (alignment > 0f)
         {
-            float factor = alignment > 0f ? downhillAcceleration : uphillDeceleration;
-            float slopeAccel = Mathf.Abs(fpc.Gravity) * steepness * alignment * factor;
+            float slopeAccel = Mathf.Abs(fpc.Gravity) * steepness * alignment * downhillAcceleration;
             float resultSpeed = result.magnitude;
             if (resultSpeed > 0.01f) result *= Mathf.Max(0f, resultSpeed + slopeAccel * dt) / resultSpeed;
         }
