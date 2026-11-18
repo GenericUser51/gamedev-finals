@@ -14,10 +14,20 @@ namespace StarterAssets
         /// <summary>
         /// Check the Armature, main camera, cinemachine virtual camera, camera target and references
         /// </summary>
+        // Unity 6000.6 deprecated the FindObjectsSortMode overloads; keep the old call for older editors.
+        static ThirdPersonController[] FindThirdPersonControllers()
+        {
+#if UNITY_6000_6_OR_NEWER
+            return FindObjectsByType<ThirdPersonController>();
+#else
+            return FindObjectsByType<ThirdPersonController>(FindObjectsSortMode.None);
+#endif
+        }
+
         [MenuItem(MenuRoot + "/Reset Third Person Controller Armature", false)]
         static void ResetThirdPersonControllerArmature()
         {
-            var thirdPersonControllers = FindObjectsByType<ThirdPersonController>(FindObjectsSortMode.None);
+            var thirdPersonControllers = FindThirdPersonControllers();
             var player = thirdPersonControllers.FirstOrDefault(controller =>
                 controller.GetComponent<Animator>() && controller.CompareTag(PlayerTag));
 
@@ -50,7 +60,7 @@ namespace StarterAssets
         [MenuItem(MenuRoot + "/Reset Third Person Controller Capsule", false)]
         static void ResetThirdPersonControllerCapsule()
         {
-            var thirdPersonControllers = FindObjectsByType<ThirdPersonController>(FindObjectsSortMode.None);
+            var thirdPersonControllers = FindThirdPersonControllers();
             var player = thirdPersonControllers.FirstOrDefault(controller =>
                 !controller.GetComponent<Animator>() && controller.CompareTag(PlayerTag));
 
